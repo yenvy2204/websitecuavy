@@ -1,0 +1,263 @@
+import React from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { Hotel, Home, Palmtree, Map, ArrowRight, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+
+import SearchBar from "../components/home/SearchBar";
+import ServiceCard from "../components/home/ServiceCard";
+import DestinationCard from "../components/home/DestinationCard";
+import TestimonialCard from "../components/home/TestimonialCard";
+
+const services = [
+  {
+    icon: Hotel,
+    title: "Khách sạn",
+    description: "Hàng ngàn khách sạn chất lượng cao trên khắp Việt Nam với giá tốt nhất",
+    color: "bg-sky-500"
+  },
+  {
+    icon: Home,
+    title: "Homestay",
+    description: "Trải nghiệm không gian ấm cúng, gần gũi với phong cách địa phương",
+    color: "bg-green-500"
+  },
+  {
+    icon: Palmtree,
+    title: "Resort",
+    description: "Resort cao cấp bên bờ biển, hồ bơi và dịch vụ spa đẳng cấp",
+    color: "bg-orange-500"
+  },
+  {
+    icon: Map,
+    title: "Tour du lịch",
+    description: "Combo tour + khách sạn tiết kiệm, trọn gói cho kỳ nghỉ hoàn hảo",
+    color: "bg-purple-500"
+  }
+];
+
+const destinations = [
+  {
+    name: "Đà Lạt",
+    image: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600",
+    description: "Thành phố ngàn hoa, khí hậu mát mẻ quanh năm",
+    hotelCount: 450
+  },
+  {
+    name: "Nha Trang",
+    image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600",
+    description: "Bãi biển đẹp nhất Việt Nam, thiên đường nghỉ dưỡng",
+    hotelCount: 380
+  },
+  {
+    name: "Phú Quốc",
+    image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=600",
+    description: "Đảo ngọc nhiệt đới với bãi biển xanh ngắt",
+    hotelCount: 320
+  },
+  {
+    name: "Sapa",
+    image: "https://images.unsplash.com/photo-1569528515935-ec0ae68ab40a?w=600",
+    description: "Ruộng bậc thang tuyệt đẹp, văn hóa vùng cao",
+    hotelCount: 280
+  }
+];
+
+const testimonials = [
+  {
+    quote: "GoStay giúp tôi tìm phòng nhanh và rẻ hơn nhiều trang khác!",
+    author: "Minh Anh",
+    location: "Hà Nội"
+  },
+  {
+    quote: "Trải nghiệm đặt phòng rất mượt, dịch vụ khách sạn đúng như mô tả.",
+    author: "Hoàng Nam",
+    location: "TP.HCM"
+  },
+  {
+    quote: "Rất hài lòng, hỗ trợ 24/7 và xác nhận phòng siêu nhanh!",
+    author: "Lan Phương",
+    location: "Đà Nẵng"
+  }
+];
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1600"
+            alt="Hero"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+        </div>
+
+        <div className="container mx-auto px-4 lg:px-6 relative z-10">
+          <div className="max-w-4xl">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="flex items-center gap-2 mb-6">
+                <Sparkles className="w-6 h-6 text-yellow-400" />
+                <span className="text-yellow-400 font-semibold">Nền tảng đặt phòng #1 Việt Nam</span>
+              </div>
+              <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                Đặt phòng dễ dàng – <br />
+                <span className="bg-gradient-to-r from-sky-400 to-green-400 bg-clip-text text-transparent">
+                  Trải nghiệm kỳ nghỉ hoàn hảo
+                </span>
+              </h1>
+              <p className="text-xl text-gray-200 mb-8 leading-relaxed max-w-2xl">
+                GoStay giúp bạn tìm kiếm, so sánh và đặt phòng khách sạn, homestay, resort tại Việt Nam chỉ trong vài phút. 
+                Hàng ngàn lựa chọn uy tín – giá tốt, dịch vụ chất lượng, thanh toán an toàn.
+              </p>
+              <div className="flex flex-wrap gap-4 mb-12">
+                <Link to={createPageUrl("Search")}>
+                  <Button size="lg" className="btn-primary text-white rounded-2xl px-8 h-14 text-lg">
+                    Khám phá ngay
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link to={createPageUrl("Search")}>
+                  <Button size="lg" variant="outline" className="bg-white/90 hover:bg-white border-0 rounded-2xl px-8 h-14 text-lg">
+                    Đặt phòng hôm nay
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <SearchBar />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="py-20 bg-gradient-to-b from-white to-gray-50">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Dịch vụ của chúng tôi
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Đa dạng lựa chọn cho mọi nhu cầu nghỉ dưỡng của bạn
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {services.map((service, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <ServiceCard {...service} />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Offers Banner */}
+      <section className="py-16 bg-gradient-to-r from-sky-600 via-sky-500 to-green-500 text-white">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-center md:text-left">
+              <h3 className="text-4xl font-bold mb-3">Ưu đãi đến 50%</h3>
+              <p className="text-xl opacity-90">cho khách đặt phòng sớm tại GoStay</p>
+            </div>
+            <Link to={createPageUrl("Search")}>
+              <Button size="lg" className="bg-white text-sky-600 hover:bg-gray-100 rounded-2xl px-8 h-14 text-lg font-bold">
+                Đặt ngay
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Destinations */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Điểm đến phổ biến
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Khám phá những địa điểm du lịch được yêu thích nhất Việt Nam
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {destinations.map((destination, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <DestinationCard {...destination} />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Khách hàng nói gì về GoStay
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Hàng nghìn đánh giá tích cực từ khách hàng hài lòng
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <TestimonialCard {...testimonial} />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 bg-gradient-to-br from-sky-600 to-sky-700 text-white">
+        <div className="container mx-auto px-4 lg:px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            Sẵn sàng cho kỳ nghỉ của bạn?
+          </h2>
+          <p className="text-xl mb-10 max-w-2xl mx-auto opacity-90">
+            Hàng ngàn khách sạn, homestay đang chờ bạn khám phá. Đặt ngay hôm nay!
+          </p>
+          <Link to={createPageUrl("Search")}>
+            <Button size="lg" className="bg-white text-sky-600 hover:bg-gray-100 rounded-2xl px-12 h-16 text-xl font-bold">
+              Bắt đầu tìm kiếm
+              <ArrowRight className="ml-2 w-6 h-6" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}

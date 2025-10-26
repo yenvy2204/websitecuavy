@@ -1,0 +1,114 @@
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+
+import HotelCard from "../components/search/HotelCard";
+import FilterPanel from "../components/search/FilterPanel";
+import SearchBar from "../components/home/SearchBar";
+
+export default function SearchPage() {
+  const [filters, setFilters] = useState({
+    priceRange: [0, 5000000],
+    stars: [],
+    amenities: []
+  });
+
+  const { data: hotels, isLoading } = useQuery({
+    queryKey: ['hotels'],
+    queryFn: () => base44.entities.Hotel.list('-created_date'),
+    initialData: [],
+  });
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const destinationParam = urlParams.get('destination');
+
+  const filteredHotels = hotels.filter(hotel => {
+    const priceMatch = hotel.price_per_night >= filters.priceRange[0] && 
+                       hotel.price_per_night <= filters.priceRange[1];
+    const starMatch = filters.stars.length === 0 || filters.stars.includes(hotel.stars);
+    const amenityMatch = filters.amenities.length === 0 || 
+                         filters.amenities.some(a => hotel.amenities?.includes(a));
+    const destinationMatch = !destinationParam || 
+                            hotel.location?.toLowerCase().includes(destinationParam.toLowerCase());
+    
+    return priceMatch && starMatch && amenityMatch && destinationMatch;
+  });
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <section className="bg-gradient-to-r from-sky-600 to-sky-700 text-white py-12">
+        <div className="container mx-auto px-4 lg:px-6">
+          <h1 className="text-4xl font-bold mb-4">Tìm phòng khách sạn & homestay</h1>
+          <p className="text-xl opacity-90 mb-8">
+            Dễ dàng tìm phòng theo địa điểm, giá, loại phòng hoặc tiện nghi. So sánh hàng trăm lựa chọn phù hợp với bạn.
+          </p>
+          <SearchBar />
+        </div>
+      </section>
+
+      <section className="py-12 bg-white border-b">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="grid md:grid-cols-4 gap-6">
+            {[
+              { step: "1", title: "Chọn phòng", desc: "Tìm và so sánh" },
+              { step: "2", title: "Điền thông tin", desc: "Nhanh và dễ dàng" },
+              { step: "3", title: "Thanh toán", desc: "An toàn bảo mật" },
+              { step: "4", title: "Xác nhận ngay", desc: "Nhận email tức thì" }
+            ].map((item, index) => (
+              <div key={index} className="text-center">
+                <div className="w-16 h-16 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-3">
+                  {item.step}
+                </div>
+                <h3 className="font-bold text-gray-900 mb-1">{item.title}</h3>
+                <p className="text-sm text-gray-600">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12">
+        <div className="container mx-auto px-4 lg:px-6">
+          <div className="grid lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-1">
+              <FilterPanel onFilterChange={setFilters} />
+            </div>
+
+            <div className="lg:col-span-3">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {filteredHotels.length} phòng tìm thấy
+                  </h2>
+                  {destinationParam && (
+                    <Badge className="mt-2 bg-sky-100 text-sky-700 border-0">
+                      {destinationParam}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {isLoading ? (
+                  Array(5).fill(0).map((_, i) => (
+                    <Skeleton key={i} className="h-64 rounded-3xl" />
+                  ))
+                ) : filteredHotels.length === 0 ? (
+                  <div className="text-center py-16">
+                    <p className="text-xl text-gray-500">Không tìm thấy kết quả phù hợp. Hãy thử điều chỉnh bộ lọc.</p>
+                  </div>
+                ) : (
+                  filteredHotels.map((hotel) => (
+                    <HotelCard key={hotel.id} hotel={hotel} />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

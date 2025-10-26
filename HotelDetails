@@ -1,0 +1,361 @@
+import React, { useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Star,
+  MapPin,
+  Wifi,
+  Coffee,
+  Car,
+  Waves,
+  Calendar as CalendarIcon,
+  Users,
+  Check,
+  ChevronLeft,
+  Home as HomeIcon
+} from "lucide-react";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+import { toast } from "sonner";
+
+const amenityIcons = {
+  "Wi-Fi": Wifi,
+  "Bữa sáng": Coffee,
+  "Đậu xe": Car,
+  "Hồ bơi": Waves,
+};
+
+export default function HotelDetailPage() {
+  const { slug } = useParams();
+  const queryClient = useQueryClient();
+  
+  const [checkIn, setCheckIn] = useState(null);
+  const [checkOut, setCheckOut] = useState(null);
+  const [guests, setGuests] = useState(2);
+  const [rooms, setRooms] = useState(1);
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [specialRequests, setSpecialRequests] = useState("");
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  const { data: hotels } = useQuery({
+    queryKey: ['hotels'],
+    queryFn: () => base44.entities.Hotel.list(),
+    initialData: [],
+  });
+
+  const hotel = hotels[0];
+
+  const bookingMutation = useMutation({
+    mutationFn: (bookingData) => base44.entities.Booking.create(bookingData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      toast.success("Đặt phòng thành công! Chúng tôi sẽ liên hệ với bạn sớm nhất.");
+      setGuestName("");
+      setGuestEmail("");
+      setGuestPhone("");
+      setSpecialRequests("");
+    },
+  });
+
+  const handleBooking = () => {
+    if (!checkIn || !checkOut || !guestName || !guestEmail || !guestPhone) {
+      toast.error("Vui lòng điền đầy đủ thông tin đặt phòng");
+      return;
+    }
+
+    const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+    const totalPrice = (hotel?.price_per_night || 0) * nights * rooms * (1 - (hotel?.discount_percent || 0) / 100);
+
+    bookingMutation.mutate({
+      hotel_id: hotel?.id,
+      guest_name: guestName,
+      guest_email: guestEmail,
+      guest_phone: guestPhone,
+      check_in: format(checkIn, "yyyy-MM-dd"),
+      check_out: format(checkOut, "yyyy-MM-dd"),
+      guests,
+      rooms,
+      total_price: totalPrice,
+      status: "pending",
+      special_requests: specialRequests
+    });
+  };
+
+  if (!hotel) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-gray-500">Đang tải...</p>
+      </div>
+    );
+  }
+
+  const images = hotel.images || ["https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="container mx-auto px-4 lg:px-6 py-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Link to={createPageUrl("Home")} className="text-gray-500 hover:text-sky-600">
+              <HomeIcon className="w-4 h-4" />
+            </Link>
+            <ChevronLeft className="w-4 h-4 rotate-180 text-gray-400" />
+            <Link to={createPageUrl("Search")} className="text-gray-500 hover:text-sky-600">
+              Tìm phòng
+            </Link>
+            <ChevronLeft className="w-4 h-4 rotate-180 text-gray-400" />
+            <span className="text-gray-900 font-medium">{hotel.name}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 lg:px-6 py-12">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Header */}
+            <div>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">{hotel.name}</h1>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MapPin className="w-5 h-5 text-sky-600" />
+                      <span>{hotel.address || hotel.location}</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {[...Array(hotel.stars || 3)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1">
+                    <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                    <span className="text-2xl font-bold">{hotel.rating}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">{hotel.reviews_count} đánh giá</p>
+                </div>
+              </div>
+
+              {hotel.discount_percent > 0 && (
+                <Badge className="bg-red-500 text-white border-0 px-4 py-2 text-sm">
+                  Giảm {hotel.discount_percent}% khi đặt ngay hôm nay!
+                </Badge>
+              )}
+            </div>
+
+            {/* Gallery */}
+            <div className="space-y-4">
+              <div className="relative h-[400px] rounded-3xl overflow-hidden">
+                <img
+                  src={images[selectedImage]}
+                  alt={hotel.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="grid grid-cols-6 gap-3">
+                {images.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`relative h-20 rounded-2xl overflow-hidden border-4 transition-all ${
+                      selectedImage === index ? "border-sky-500" : "border-transparent"
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <Card className="rounded-3xl border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-2xl">Giới thiệu</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 leading-relaxed">{hotel.description}</p>
+              </CardContent>
+            </Card>
+
+            {/* Amenities */}
+            <Card className="rounded-3xl border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-2xl">Tiện nghi</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {hotel.amenities?.map((amenity, index) => {
+                    const Icon = amenityIcons[amenity] || Check;
+                    return (
+                      <div key={index} className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-sky-100 rounded-xl flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-sky-600" />
+                        </div>
+                        <span className="text-gray-700 font-medium">{amenity}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Policies */}
+            <Card className="rounded-3xl border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="text-2xl">Chính sách</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Chính sách hủy phòng</h4>
+                  <p className="text-gray-700">{hotel.cancellation_policy || "Miễn phí hủy trước 48 giờ"}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Vị trí</h4>
+                  <p className="text-gray-700">{hotel.address || hotel.location}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Booking Widget */}
+          <div className="lg:col-span-1">
+            <Card className="rounded-3xl border-0 shadow-2xl sticky top-24">
+              <CardHeader className="bg-gradient-to-r from-sky-600 to-sky-700 text-white rounded-t-3xl">
+                <CardTitle className="text-2xl">Đặt phòng ngay</CardTitle>
+                <div className="flex items-baseline gap-2 mt-2">
+                  {hotel.discount_percent > 0 && (
+                    <span className="text-lg line-through opacity-75">
+                      {hotel.price_per_night.toLocaleString()}đ
+                    </span>
+                  )}
+                  <span className="text-3xl font-bold">
+                    {(hotel.price_per_night * (1 - (hotel.discount_percent || 0) / 100)).toLocaleString()}đ
+                  </span>
+                  <span className="text-sm opacity-90">/đêm</span>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-2">
+                  <Label>Ngày nhận phòng</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start rounded-xl">
+                        <CalendarIcon className="mr-2 w-4 h-4" />
+                        {checkIn ? format(checkIn, "dd/MM/yyyy") : "Chọn ngày"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={checkIn} onSelect={setCheckIn} locale={vi} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Ngày trả phòng</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start rounded-xl">
+                        <CalendarIcon className="mr-2 w-4 h-4" />
+                        {checkOut ? format(checkOut, "dd/MM/yyyy") : "Chọn ngày"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={checkOut} onSelect={setCheckOut} locale={vi} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Số khách</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={guests}
+                      onChange={(e) => setGuests(parseInt(e.target.value))}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Số phòng</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={rooms}
+                      onChange={(e) => setRooms(parseInt(e.target.value))}
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label>Họ tên *</Label>
+                    <Input
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="Nguyễn Văn A"
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email *</Label>
+                    <Input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="email@example.com"
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Số điện thoại *</Label>
+                    <Input
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="0912345678"
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Yêu cầu đặc biệt</Label>
+                    <Textarea
+                      value={specialRequests}
+                      onChange={(e) => setSpecialRequests(e.target.value)}
+                      placeholder="Ghi chú thêm..."
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleBooking}
+                  disabled={bookingMutation.isPending}
+                  className="w-full btn-primary text-white rounded-xl h-12 text-lg font-bold"
+                >
+                  {bookingMutation.isPending ? "Đang xử lý..." : "Đặt ngay"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
